@@ -22,7 +22,7 @@
 
 [tool.poetry]
 name = "urtypes"
-version = "1.0.0"
+version = "1.0.1"
 description = "Python implementation of the Blockchain Commons UR Types specification"
 authors = ["Jeff S <jeffreesun@protonmail.com>"]
 readme = "README.md"
@@ -38,7 +38,7 @@ repository = "https://github.com/selfcustody/urtypes"
 "Bug Tracker" = "https://github.com/selfcustody/urtypes/issues"
 
 [tool.poetry.dependencies]
-python = "^3.12.3"
+python = "^3.10"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^6.2.5"
