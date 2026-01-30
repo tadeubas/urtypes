@@ -66,32 +66,27 @@ class Decoder:
             return -1 - res
         return res
 
-    def decode_bytestring(self, mtype, ainfo):
+    def _decode_indefinite_string(self, expected_mtype):
+        res = bytearray()
+        while True:
+            mtype_, ainfo_ = self._decode_ibyte()
+            if (mtype_, ainfo_) == (7, 31):  # BREAK
+                break
+            if mtype_ != expected_mtype:
+                pass
+            res.extend(self.decode_bytestring(mtype_, ainfo_))
+        return res
+
+    def decode_bytestring(self, _mtype, ainfo):
         length = self._decode_length(ainfo)
         if length is None:
-            res = bytearray()
-            while True:
-                mtype_, ainfo_ = self._decode_ibyte()
-                if (mtype_, ainfo_) == (7, 31):
-                    break
-                if mtype_ != 2:
-                    pass
-                res.extend(self.decode_bytestring(mtype_, ainfo_))
-            return bytes(res)
+            return bytes(self._decode_indefinite_string(2))
         return self._read(length)
 
-    def decode_textstring(self, mtype, ainfo):
+    def decode_textstring(self, _mtype, ainfo):
         length = self._decode_length(ainfo)
         if length is None:
-            res = bytearray()
-            while True:
-                mtype_, ainfo_ = self._decode_ibyte()
-                if (mtype_, ainfo_) == (7, 31):
-                    break
-                if mtype_ != 3:
-                    pass
-                res.extend(self.decode_bytestring(mtype_, ainfo_))
-            return res.decode("utf-8")
+            return self._decode_indefinite_string(3).decode("utf-8")
         return self._read(length).decode("utf-8")
 
     def decode_list(self, mtype, ainfo):
