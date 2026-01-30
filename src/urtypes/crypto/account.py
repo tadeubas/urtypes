@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from urtypes import RegistryType, RegistryItem
+from ..registry import RegistryType, RegistryItem
 from .output import Output
 
 CRYPTO_ACCOUNT = RegistryType("crypto-account", 311)
@@ -43,18 +43,20 @@ class Account(RegistryItem):
         return CRYPTO_ACCOUNT
 
     def to_data_item(self):
-        map = {}
+        _map = {}
         if self.master_fingerprint is not None:
-            map[1] = int.from_bytes(self.master_fingerprint, "big")
+            _map[1] = int.from_bytes(self.master_fingerprint, "big")
         if self.output_descriptors is not None:
-            map[2] = [
+            _map[2] = [
                 descriptor.to_data_item() for descriptor in self.output_descriptors
             ]
-        return map
+        return _map
 
     @classmethod
     def from_data_item(cls, item):
-        map = cls.mapping(item)
-        master_fingerprint = map[1].to_bytes(4, "big") if 1 in map else None
-        outputs = [Output.from_data_item(item) for item in map[2]] if 2 in map else None
+        _map = cls.mapping(item)
+        master_fingerprint = _map[1].to_bytes(4, "big") if 1 in _map else None
+        outputs = (
+            [Output.from_data_item(item) for item in _map[2]] if 2 in _map else None
+        )
         return cls(master_fingerprint, outputs)

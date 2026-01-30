@@ -24,18 +24,17 @@
 # coding: utf-8
 
 import struct
+from .data import Tagging, Mapping, Undefined
 
 _str_type = type("")
 _bytes_type = type(b"")
-
-from .data import Tagging, Mapping, Undefined
 
 
 class EncoderError(Exception):
     pass
 
 
-class Encoder(object):
+class Encoder:
     def __init__(self, output):
         self.output = output
 
@@ -66,14 +65,14 @@ class Encoder(object):
         else:
             raise EncoderError("val of type {} is not serializable".format(type(val)))
 
-    def encode_list(self, list):
-        self._write(_encode_ibyte(4, len(list)))
-        for elem in list:
+    def encode_list(self, _list):
+        self._write(_encode_ibyte(4, len(_list)))
+        for elem in _list:
             self.encode(elem)
 
-    def encode_dict(self, dict):
-        self._write(_encode_ibyte(5, len(dict)))
-        for key, value in dict.items():
+    def encode_dict(self, _dict):
+        self._write(_encode_ibyte(5, len(_dict)))
+        for key, value in _dict.items():
             self.encode(key)
             self.encode(value)
 
@@ -86,34 +85,34 @@ class Encoder(object):
         self._write(_encode_ibyte(3, len(string_)))
         self._write(string_)
 
-    def encode_float(self, float):
+    def encode_float(self, _float):
         self._write(b"\xfb")
-        self._write(struct.pack(">d", float))
+        self._write(struct.pack(">d", _float))
 
     def encode_integer(self, integer):
         if integer < 0:
             integer = -integer - 1
             try:
                 self._write(_encode_ibyte(1, integer))
-            except TypeError:
+            except TypeError as e:
                 raise EncoderError(
                     "Encoding integers lower than -18446744073709551616 is not supported"
-                )
+                ) from e
         else:
             try:
                 self._write(_encode_ibyte(0, integer))
-            except TypeError:
+            except TypeError as e:
                 raise EncoderError(
                     "Encoding integers larger than 18446744073709551615 is not supported"
-                )
+                ) from e
 
     def encode_tagging(self, tagging):
         try:
             self._write(_encode_ibyte(6, tagging.tag))
-        except TypeError:
+        except TypeError as e:
             raise EncoderError(
                 "Encoding tag larger than 18446744073709551615 is not supported"
-            )
+            ) from e
         self.encode(tagging.obj)
 
     def encode_boolean(self, boolean):
@@ -135,16 +134,15 @@ class Encoder(object):
 def _encode_ibyte(major, length):
     if length < 24:
         return struct.pack(">B", (major << 5) | length)
-    elif length < 256:
+    if length < 256:
         return struct.pack(">BB", (major << 5) | 24, length)
-    elif length < 65536:
+    if length < 65536:
         return struct.pack(">BH", (major << 5) | 25, length)
-    elif length < 4294967296:
+    if length < 4294967296:
         return struct.pack(">BI", (major << 5) | 26, length)
-    elif length < 18446744073709551616:
+    if length < 18446744073709551616:
         return struct.pack(">BQ", (major << 5) | 27, length)
-    else:
-        return None
+    return None
 
 
-__all__ = ["Encoder", "EncoderError"]
+__all__ = ("Encoder", "EncoderError")

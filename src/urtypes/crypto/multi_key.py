@@ -20,8 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from urtypes import RegistryItem
-from urtypes.cbor import DataItem
+from ..registry import RegistryItem
+from ..cbor import DataItem
 from .hd_key import HDKey, CRYPTO_HDKEY
 from .ec_key import ECKey, CRYPTO_ECKEY
 
@@ -45,20 +45,20 @@ class MultiKey(RegistryItem):
         return None
 
     def to_data_item(self):
-        map = {}
-        map[1] = self.threshold
+        _map = {}
+        _map[1] = self.threshold
         combined_keys = self.ec_keys[:] + self.hd_keys[:]
         keys = []
         for key in combined_keys:
             keys.append(DataItem(key.registry_type().tag, key.to_data_item()))
-        map[2] = keys
-        return map
+        _map[2] = keys
+        return _map
 
     @classmethod
     def from_data_item(cls, item):
-        map = item.map
-        threshold = map[1]
-        keys = map[2]
+        _map = item.map
+        threshold = _map[1]
+        keys = _map[2]
         ec_keys = []
         hd_keys = []
         for key in keys:

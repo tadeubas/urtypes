@@ -20,13 +20,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from ..registry import RegistryType
-from ..bytes import Bytes
+import io
+import binascii
+from unittest import TestCase
+from urtypes.cbor.decoder import Decoder
 
-CRYPTO_PSBT = RegistryType("crypto-psbt", 310)
+class DecoderTestCase(TestCase):
+    def test_indefinite_bytestring(self):
+        cbor = binascii.unhexlify("5f420102420304ff")
+        decoder = Decoder(io.BytesIO(cbor))
+        self.assertEqual(decoder.decode(), b"\x01\x02\x03\x04")
 
+    def test_indefinite_textstring(self):
+        cbor = binascii.unhexlify("7f62686963746865ff")
+        decoder = Decoder(io.BytesIO(cbor))
+        self.assertEqual(decoder.decode(), "hithe")
 
-class PSBT(Bytes):
-    @classmethod
-    def registry_type(cls):
-        return CRYPTO_PSBT
+    def test_indefinite_list(self):
+        cbor = binascii.unhexlify("9f010203ff")
+        decoder = Decoder(io.BytesIO(cbor))
+        self.assertEqual(decoder.decode(), [1, 2, 3])
+
+    def test_indefinite_map(self):
+        cbor = binascii.unhexlify("bf616101616202ff")
+        decoder = Decoder(io.BytesIO(cbor))
+        self.assertEqual(decoder.decode(), {"a": 1, "b": 2})
+

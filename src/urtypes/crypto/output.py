@@ -21,8 +21,8 @@
 # THE SOFTWARE.
 
 import io
-from urtypes import RegistryType, RegistryItem
-from urtypes.cbor import DataItem
+from ..registry import RegistryType, RegistryItem
+from ..cbor import DataItem
 from .multi_key import MultiKey
 from .hd_key import HDKey, CRYPTO_HDKEY
 from .ec_key import ECKey
@@ -142,16 +142,14 @@ class Output(RegistryItem):
                 break
         exp_len = len(script_expressions)
         is_multi_key = exp_len > 0 and (
-            script_expressions[exp_len - 1].expression == "multi"
-            or script_expressions[exp_len - 1].expression == "sortedmulti"
+            script_expressions[exp_len - 1].expression in ("multi", "sortedmulti")
         )
         if is_multi_key:
             return cls(script_expressions, MultiKey.from_data_item(tmp_item))
 
         if tmp_item.tag == CRYPTO_HDKEY.tag:
             return cls(script_expressions, HDKey.from_data_item(tmp_item))
-        else:
-            return cls(script_expressions, ECKey.from_data_item(tmp_item))
+        return cls(script_expressions, ECKey.from_data_item(tmp_item))
 
 
 def polymod(c, val):

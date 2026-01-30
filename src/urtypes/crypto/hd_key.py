@@ -22,8 +22,8 @@
 
 import binascii
 import hashlib
-from urtypes import RegistryType, RegistryItem
-from urtypes.cbor import DataItem
+from ..registry import RegistryType, RegistryItem
+from ..cbor import DataItem
 from .coin_info import CoinInfo
 from .keypath import Keypath
 
@@ -164,50 +164,50 @@ class HDKey(RegistryItem):
         return self.bip32_key(True)
 
     def to_data_item(self):
-        map = {}
+        _map = {}
         if self.master:
-            map[1] = True
-            map[3] = self.key
-            map[4] = self.chain_code
+            _map[1] = True
+            _map[3] = self.key
+            _map[4] = self.chain_code
         else:
             if self.private_key is not None:
-                map[2] = self.private_key
-            map[3] = self.key
+                _map[2] = self.private_key
+            _map[3] = self.key
             if self.chain_code is not None:
-                map[4] = self.chain_code
+                _map[4] = self.chain_code
             if self.use_info is not None:
-                map[5] = DataItem(
+                _map[5] = DataItem(
                     self.use_info.registry_type().tag, self.use_info.to_data_item()
                 )
             if self.origin is not None:
-                map[6] = DataItem(
+                _map[6] = DataItem(
                     self.origin.registry_type().tag, self.origin.to_data_item()
                 )
             if self.children is not None:
-                map[7] = DataItem(
+                _map[7] = DataItem(
                     self.children.registry_type().tag, self.children.to_data_item()
                 )
             if self.parent_fingerprint is not None:
-                map[8] = int.from_bytes(self.parent_fingerprint, "big")
+                _map[8] = int.from_bytes(self.parent_fingerprint, "big")
             if self.name is not None:
-                map[9] = self.name
+                _map[9] = self.name
             if self.note is not None:
-                map[10] = self.note
-        return map
+                _map[10] = self.note
+        return _map
 
     @classmethod
     def from_data_item(cls, item):
-        map = cls.mapping(item)
-        master = 1 in map and map[1]
-        private_key = map[2] if 2 in map else None
-        key = map[3] if 3 in map else None
-        chain_code = map[4] if 4 in map else None
-        use_info = CoinInfo.from_data_item(map[5]) if 5 in map else None
-        origin = Keypath.from_data_item(map[6]) if 6 in map else None
-        children = Keypath.from_data_item(map[7]) if 7 in map else None
-        parent_fingerprint = map[8].to_bytes(4, "big") if 8 in map else None
-        name = map[9] if 9 in map else None
-        note = map[10] if 10 in map else None
+        _map = cls.mapping(item)
+        master = 1 in _map and _map[1]
+        private_key = _map[2] if 2 in _map else None
+        key = _map[3] if 3 in _map else None
+        chain_code = _map[4] if 4 in _map else None
+        use_info = CoinInfo.from_data_item(_map[5]) if 5 in _map else None
+        origin = Keypath.from_data_item(_map[6]) if 6 in _map else None
+        children = Keypath.from_data_item(_map[7]) if 7 in _map else None
+        parent_fingerprint = _map[8].to_bytes(4, "big") if 8 in _map else None
+        name = _map[9] if 9 in _map else None
+        note = _map[10] if 10 in _map else None
         return cls(
             {
                 "master": master,

@@ -21,7 +21,7 @@
 # THE SOFTWARE.
 
 import binascii
-from urtypes import RegistryType, RegistryItem
+from ..registry import RegistryType, RegistryItem
 
 CRYPTO_ECKEY = RegistryType("crypto-eckey", 306)
 
@@ -45,20 +45,20 @@ class ECKey(RegistryItem):
         return CRYPTO_ECKEY
 
     def to_data_item(self):
-        map = {}
+        _map = {}
         if self.curve is not None:
-            map[1] = self.curve
+            _map[1] = self.curve
         if self.private_key is not None:
-            map[2] = self.private_key
-        map[3] = self.data
-        return map
+            _map[2] = self.private_key
+        _map[3] = self.data
+        return _map
 
     @classmethod
     def from_data_item(cls, item):
-        map = cls.mapping(item)
-        data = map[3]
-        curve = map[1] if 1 in map else None
-        private_key = map[2] if 2 in map else None
+        _map = cls.mapping(item)
+        data = _map[3]
+        curve = _map[1] if 1 in _map else None
+        private_key = _map[2] if 2 in _map else None
         return cls(data, curve, private_key)
 
     def descriptor_key(self):

@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from urtypes import RegistryType, RegistryItem
+from ..registry import RegistryType, RegistryItem
 
 CRYPTO_BIP39 = RegistryType("crypto-bip39", 301)
 
@@ -39,14 +39,14 @@ class BIP39(RegistryItem):
         return CRYPTO_BIP39
 
     def to_data_item(self):
-        map = {1: self.words}
+        _map = {1: self.words}
         if self.lang is not None:
-            map[2] = self.lang
-        return map
+            _map[2] = self.lang
+        return _map
 
     @classmethod
     def from_data_item(cls, item):
-        map = cls.mapping(item)
-        words = map[1]
-        lang = map[2] if 2 in map else None
+        _map = cls.mapping(item)
+        words = _map[1]
+        lang = _map[2] if 2 in _map else None
         return cls(words, lang)

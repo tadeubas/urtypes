@@ -24,7 +24,7 @@
 # coding: utf-8
 
 
-class Tagging(object):
+class Tagging:
     __slots__ = ("tag", "obj")
 
     def __init__(self, tag, obj):
@@ -39,24 +39,25 @@ class Tagging(object):
         )
 
 
-class Mapping(object):
-    __slots__ = "map"
+class Mapping:
+    __slots__ = ("map",)
 
-    def __init__(self, map):
-        self.map = map
+    def __init__(self, _map):
+        self.map = _map
 
+    @staticmethod
     def mapping(obj):
         return Mapping(obj)
 
 
 class DataItem(Tagging):
-    def __init__(self, tag, map):
-        super().__init__(tag, Mapping(map))
+    def __init__(self, tag, _map):
+        super().__init__(tag, Mapping(_map))
         self.tag = tag
-        self.map = map
+        self.map = _map
 
 
-class _Undefined(object):
+class _Undefined:
     _instance = None
 
     def __new__(cls, *args, **kwargs):
@@ -73,4 +74,4 @@ class _Undefined(object):
 
 Undefined = _Undefined()
 
-__all__ = ["Tagging", "Mapping", "DataItem"]
+__all__ = ("Tagging", "Mapping", "DataItem")
