@@ -26,9 +26,6 @@
 import struct
 from .data import Tagging, Mapping, Undefined
 
-_str_type = type("")
-_bytes_type = type(b"")
-
 
 class EncoderError(Exception):
     pass
@@ -39,9 +36,9 @@ class Encoder:
         self.output = output
 
     def encode(self, val):
-        if isinstance(val, _bytes_type):
+        if isinstance(val, bytes):
             self.encode_bytestring(val)
-        elif isinstance(val, _str_type):
+        elif isinstance(val, str):
             self.encode_textstring(val)
         elif isinstance(val, float):
             self.encode_float(val)

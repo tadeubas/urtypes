@@ -20,19 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import binascii
-import hashlib
 from ..registry import RegistryType, RegistryItem
-from ..cbor import DataItem
-from .coin_info import CoinInfo
-from .keypath import Keypath
 
 CRYPTO_HDKEY = RegistryType("crypto-hdkey", 303)
 
 
 class HDKey(RegistryItem):
     def __init__(self, props):
-        super().__init__()
         self.master = None
         self.key = None
         self.chain_code = None
@@ -86,6 +80,8 @@ class HDKey(RegistryItem):
         self.note = props["note"] if "note" in props else None
 
     def bip32_key(self, include_derivation_path=False):
+        import binascii
+
         parent_fingerprint = (0).to_bytes(4, "big")
         source_is_parent = False
         chain_code = (
@@ -170,6 +166,8 @@ class HDKey(RegistryItem):
             _map[3] = self.key
             _map[4] = self.chain_code
         else:
+            from ..cbor import DataItem
+
             if self.private_key is not None:
                 _map[2] = self.private_key
             _map[3] = self.key
@@ -197,6 +195,9 @@ class HDKey(RegistryItem):
 
     @classmethod
     def from_data_item(cls, item):
+        from .coin_info import CoinInfo
+        from .keypath import Keypath
+
         _map = cls.mapping(item)
         master = 1 in _map and _map[1]
         private_key = _map[2] if 2 in _map else None
@@ -224,16 +225,18 @@ class HDKey(RegistryItem):
         )
 
 
-B58_DIGITS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-
-
 def double_sha256(msg):
     """sha256(sha256(msg)) -> bytes"""
+    import hashlib
+
     return hashlib.sha256(hashlib.sha256(msg).digest()).digest()
 
 
 def encode(b):
     """Encode bytes to a base58-encoded string"""
+    import binascii
+
+    B58_DIGITS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
     # Convert big-endian bytes to integer
     n = int("0x0" + binascii.hexlify(b).decode("utf8"), 16)

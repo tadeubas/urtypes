@@ -20,12 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import io
 from ..registry import RegistryType, RegistryItem
-from ..cbor import DataItem
-from .multi_key import MultiKey
-from .hd_key import HDKey, CRYPTO_HDKEY
-from .ec_key import ECKey
 
 
 class ScriptExpression:
@@ -57,7 +52,6 @@ CRYPTO_OUTPUT = RegistryType("crypto-output", 308)
 
 class Output(RegistryItem):
     def __init__(self, script_expressions, crypto_key):
-        super().__init__()
         self.script_expressions = script_expressions
         self.crypto_key = crypto_key
 
@@ -72,6 +66,9 @@ class Output(RegistryItem):
         return CRYPTO_OUTPUT
 
     def descriptor(self, include_checksum=True):
+        import io
+        from .multi_key import MultiKey
+
         descriptor = io.StringIO()
 
         for script_expression in self.script_expressions:
@@ -98,21 +95,29 @@ class Output(RegistryItem):
         return d
 
     def hd_key(self):
+        from .hd_key import HDKey
+
         if isinstance(self.crypto_key, HDKey):
             return self.crypto_key
         return None
 
     def ec_key(self):
+        from .ec_key import ECKey
+
         if isinstance(self.crypto_key, ECKey):
             return self.crypto_key
         return None
 
     def multi_key(self):
+        from .multi_key import MultiKey
+
         if isinstance(self.crypto_key, MultiKey):
             return self.crypto_key
         return None
 
     def to_data_item(self):
+        from ..cbor import DataItem
+
         item = DataItem(None, self.crypto_key.to_data_item())
         if self.crypto_key.registry_type() is not None:
             item.tag = self.crypto_key.registry_type().tag
@@ -133,6 +138,8 @@ class Output(RegistryItem):
         while True:
             tag = tmp_item.tag
             if tag in SCRIPT_EXPRESSION_TAG_MAP:
+                from ..cbor import DataItem
+
                 script_expressions.append(SCRIPT_EXPRESSION_TAG_MAP[tag])
                 if isinstance(tmp_item.map, DataItem):
                     tmp_item = tmp_item.map
@@ -145,10 +152,17 @@ class Output(RegistryItem):
             script_expressions[exp_len - 1].expression in ("multi", "sortedmulti")
         )
         if is_multi_key:
+            from .multi_key import MultiKey
+
             return cls(script_expressions, MultiKey.from_data_item(tmp_item))
+
+        from .hd_key import HDKey, CRYPTO_HDKEY
 
         if tmp_item.tag == CRYPTO_HDKEY.tag:
             return cls(script_expressions, HDKey.from_data_item(tmp_item))
+
+        from .ec_key import ECKey
+
         return cls(script_expressions, ECKey.from_data_item(tmp_item))
 
 
@@ -168,11 +182,8 @@ def polymod(c, val):
     return c
 
 
-INPUT_CHARSET = "0123456789()[],'/*abcdefgh@:$%{}IJKLMNOPQRSTUVWXYZ&+-.;<=>?!^_|~ijklmnopqrstuvwxyzABCDEFGH`#\"\\ "
-CHECKSUM_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
-
-
 def descriptor_checksum(descriptor):
+    INPUT_CHARSET = "0123456789()[],'/*abcdefgh@:$%{}IJKLMNOPQRSTUVWXYZ&+-.;<=>?!^_|~ijklmnopqrstuvwxyzABCDEFGH`#\"\\ "
     c = 1
     cls = 0
     clscount = 0
@@ -192,6 +203,7 @@ def descriptor_checksum(descriptor):
     for _ in range(8):
         c = polymod(c, 0)
     c ^= 1
+    CHECKSUM_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
     checksum = ""
     for i in range(8):
         checksum += CHECKSUM_CHARSET[(c >> (5 * (7 - i))) & 31]

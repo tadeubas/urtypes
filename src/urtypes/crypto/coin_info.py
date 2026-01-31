@@ -27,7 +27,6 @@ CRYPTO_COIN_INFO = RegistryType("crypto-coin-info", 305)
 
 class CoinInfo(RegistryItem):
     def __init__(self, _type, network):
-        super().__init__()
         self.type = _type
         self.network = network
 

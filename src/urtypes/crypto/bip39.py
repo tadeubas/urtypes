@@ -27,7 +27,6 @@ CRYPTO_BIP39 = RegistryType("crypto-bip39", 301)
 
 class BIP39(RegistryItem):
     def __init__(self, words, lang):
-        super().__init__()
         self.words = words
         self.lang = lang
 

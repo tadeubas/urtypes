@@ -21,14 +21,10 @@
 # THE SOFTWARE.
 
 from ..registry import RegistryItem
-from ..cbor import DataItem
-from .hd_key import HDKey, CRYPTO_HDKEY
-from .ec_key import ECKey, CRYPTO_ECKEY
 
 
 class MultiKey(RegistryItem):
     def __init__(self, threshold, ec_keys, hd_keys):
-        super().__init__()
         self.threshold = threshold
         self.ec_keys = ec_keys
         self.hd_keys = hd_keys
@@ -45,6 +41,8 @@ class MultiKey(RegistryItem):
         return None
 
     def to_data_item(self):
+        from ..cbor import DataItem
+
         _map = {}
         _map[1] = self.threshold
         combined_keys = self.ec_keys[:] + self.hd_keys[:]
@@ -56,6 +54,9 @@ class MultiKey(RegistryItem):
 
     @classmethod
     def from_data_item(cls, item):
+        from .hd_key import HDKey, CRYPTO_HDKEY
+        from .ec_key import ECKey, CRYPTO_ECKEY
+
         _map = item.map
         threshold = _map[1]
         keys = _map[2]

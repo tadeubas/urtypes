@@ -21,14 +21,12 @@
 # THE SOFTWARE.
 
 from ..registry import RegistryType, RegistryItem
-from .output import Output
 
 CRYPTO_ACCOUNT = RegistryType("crypto-account", 311)
 
 
 class Account(RegistryItem):
     def __init__(self, master_fingerprint, output_descriptors):
-        super().__init__()
         self.master_fingerprint = master_fingerprint
         self.output_descriptors = output_descriptors
 
@@ -56,6 +54,9 @@ class Account(RegistryItem):
     def from_data_item(cls, item):
         _map = cls.mapping(item)
         master_fingerprint = _map[1].to_bytes(4, "big") if 1 in _map else None
+
+        from .output import Output
+
         outputs = (
             [Output.from_data_item(item) for item in _map[2]] if 2 in _map else None
         )

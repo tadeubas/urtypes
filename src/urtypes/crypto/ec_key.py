@@ -20,7 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import binascii
 from ..registry import RegistryType, RegistryItem
 
 CRYPTO_ECKEY = RegistryType("crypto-eckey", 306)
@@ -28,7 +27,6 @@ CRYPTO_ECKEY = RegistryType("crypto-eckey", 306)
 
 class ECKey(RegistryItem):
     def __init__(self, data, curve, private_key):
-        super().__init__()
         self.data = data
         self.curve = curve
         self.private_key = private_key
@@ -62,4 +60,6 @@ class ECKey(RegistryItem):
         return cls(data, curve, private_key)
 
     def descriptor_key(self):
+        import binascii
+
         return binascii.hexlify(self.data).decode()

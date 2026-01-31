@@ -23,10 +23,7 @@
 # THE SOFTWARE.
 # coding: utf-8
 
-import struct
-import math
-
-from .data import DataItem, Undefined
+from .data import DataItem
 
 
 class InvalidCborError(Exception):
@@ -127,16 +124,24 @@ class Decoder:
         return DataItem(length, self.decode())
 
     def decode_half_float(self, mtype, ainfo):
+        import struct
+
         half = struct.unpack(">H", self._read(2))[0]
         valu = (half & 0x7FFF) << 13 | (half & 0x8000) << 16
         if (half & 0x7C00) != 0x7C00:
+            import math
+
             return math.ldexp(struct.unpack("!f", struct.pack("!I", valu))[0], 112)
         return struct.unpack("!f", struct.pack("!I", valu | 0x7F800000))[0]
 
     def decode_single_float(self, mtype, ainfo):
+        import struct
+
         return struct.unpack(">f", self._read(4))[0]
 
     def decode_double_float(self, mtype, ainfo):
+        import struct
+
         return struct.unpack(">d", self._read(8))[0]
 
     def decode_other(self, mtype, ainfo):
@@ -147,6 +152,8 @@ class Decoder:
         if ainfo == 22:
             return None
         if ainfo == 23:
+            from .data import Undefined
+
             return Undefined
         if ainfo == 25:
             return self.decode_half_float(mtype, ainfo)

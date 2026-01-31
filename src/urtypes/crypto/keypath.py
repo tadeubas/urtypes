@@ -27,7 +27,6 @@ CRYPTO_KEYPATH = RegistryType("crypto-keypath", 304)
 
 class Keypath(RegistryItem):
     def __init__(self, components, source_fingerprint, depth):
-        super().__init__()
         self.components = components
         self.source_fingerprint = source_fingerprint
         self.depth = depth

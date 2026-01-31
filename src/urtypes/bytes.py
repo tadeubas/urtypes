@@ -27,7 +27,6 @@ BYTES = RegistryType("bytes", None)
 
 class Bytes(RegistryItem):
     def __init__(self, data):
-        super().__init__()
         self.data = data
 
     def __eq__(self, o):
