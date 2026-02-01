@@ -20,9 +20,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import binascii
 from ..registry import RegistryType, RegistryItem
 
 CRYPTO_HDKEY = RegistryType("crypto-hdkey", 303)
+
+_ZERO4 = (0).to_bytes(4, "big")
+_ZERO32 = (0).to_bytes(32, "big")
+
+_XPRV = binascii.unhexlify("0488ADE4")
+_TPRV = binascii.unhexlify("04358394")
+_XPUB = binascii.unhexlify("0488B21E")
+_TPUB = binascii.unhexlify("043587CF")
 
 
 class HDKey(RegistryItem):
@@ -53,94 +62,90 @@ class HDKey(RegistryItem):
 
     def setup_derive_key(self, props):
         self.master = False
-        self.key = props["key"] if "key" in props else None
-        self.chain_code = props["chain_code"] if "chain_code" in props else None
-        self.private_key = props["private_key"] if "private_key" in props else None
-        self.use_info = props["use_info"] if "use_info" in props else None
-        self.origin = props["origin"] if "origin" in props else None
-        self.children = props["children"] if "children" in props else None
-        self.parent_fingerprint = (
-            props["parent_fingerprint"] if "parent_fingerprint" in props else None
-        )
-        self.name = props["name"] if "name" in props else None
-        self.note = props["note"] if "note" in props else None
+        get = props.get
+        self.key = get("key")
+        self.chain_code = get("chain_code")
+        self.private_key = get("private_key")
+        self.use_info = get("use_info")
+        self.origin = get("origin")
+        self.children = get("children")
+        self.parent_fingerprint = get("parent_fingerprint")
+        self.name = get("name")
+        self.note = get("note")
 
     def bip32_key(self, include_derivation_path=False):
-        import binascii
-
-        parent_fingerprint = (0).to_bytes(4, "big")
-        source_is_parent = False
-        chain_code = (
-            self.chain_code if self.chain_code is not None else (0).to_bytes(32, "big")
-        )
+        parent_fp = self.parent_fingerprint or _ZERO4
+        chain = self.chain_code or _ZERO32
         key = self.key
         if len(key) == 32:
-            key = 0x00 + key
+            key = b"\x00" + key
+
         depth = 0
         index = 0
+        source_is_parent = False
+
         if self.master:
-            version = binascii.unhexlify(
-                "0488ADE4"
-                if not self.use_info or self.use_info.network == 0
-                else "04358394"
+            version = (
+                _XPRV if not self.use_info or self.use_info.network == 0 else _TPRV
             )
         else:
             if self.private_key:
-                version = binascii.unhexlify(
-                    "0488ADE4"
-                    if not self.use_info or self.use_info.network == 0
-                    else "04358394"
+                version = (
+                    _XPRV if not self.use_info or self.use_info.network == 0 else _TPRV
                 )
             else:
-                version = binascii.unhexlify(
-                    "0488B21E"
-                    if not self.use_info or self.use_info.network == 0
-                    else "043587CF"
+                version = (
+                    _XPUB if not self.use_info or self.use_info.network == 0 else _TPUB
                 )
-            if self.parent_fingerprint is not None:
-                parent_fingerprint = self.parent_fingerprint
-            depth = (
-                self.origin.depth
-                if self.origin.depth is not None
-                else len(self.origin.components)
-            )
-            paths = self.origin.components
-            if len(paths) > 0:
-                last_path = paths[len(paths) - 1]
-                index = last_path.index
-                if last_path.hardened:
-                    index += 0x80000000
-                if (
-                    self.parent_fingerprint is None
-                    and self.origin.source_fingerprint is not None
-                    and len(paths) == 1
-                ):
-                    parent_fingerprint = self.origin.source_fingerprint
-                    source_is_parent = True
-        depth = depth.to_bytes(1, "big")
-        index = index.to_bytes(4, "big")
-        key = encode_check(
-            version + depth + parent_fingerprint + index + chain_code + key
+
+            origin = self.origin
+            if origin:
+                depth = (
+                    origin.depth if origin.depth is not None else len(origin.components)
+                )
+                paths = origin.components
+                if paths:
+                    last = paths[-1]
+                    index = last.index + (0x80000000 if last.hardened else 0)
+                    if (
+                        self.parent_fingerprint is None
+                        and origin.source_fingerprint
+                        and len(paths) == 1
+                    ):
+                        parent_fp = origin.source_fingerprint
+                        source_is_parent = True
+
+        payload = (
+            version
+            + depth.to_bytes(1, "big")
+            + parent_fp
+            + index.to_bytes(4, "big")
+            + chain
+            + key
         )
-        if include_derivation_path:
-            derivation = ""
-            if (
-                self.origin
-                and self.origin.path()
-                and self.origin.source_fingerprint
-                and not source_is_parent
-            ):
-                derivation = "[%s/%s]" % (
-                    binascii.hexlify(self.origin.source_fingerprint).decode("utf-8"),
-                    self.origin.path(),
-                )
 
-            child_derivation = ""
-            if self.children and self.children.path():
-                child_derivation = "/" + self.children.path()
+        encoded = encode_check(payload)  # key
 
-            return "%s%s%s" % (derivation, key, child_derivation)
-        return key
+        if not include_derivation_path:
+            return encoded
+
+        deriv = ""
+        if (
+            self.origin
+            and self.origin.path()
+            and self.origin.source_fingerprint
+            and not source_is_parent
+        ):
+            deriv = "[%s/%s]" % (
+                binascii.hexlify(self.origin.source_fingerprint).decode("utf-8"),
+                self.origin.path(),
+            )
+
+        child = ""
+        if self.children and self.children.path():
+            child = "/" + self.children.path()
+
+        return deriv + encoded + child
 
     def descriptor_key(self):
         return self.bip32_key(True)
