@@ -22,15 +22,11 @@
 
 import binascii
 from unittest import TestCase
-from urtypes.crypto import (
-    Keypath,
-    PathComponent,
-    MultiKey,
-    ECKey,
-    HDKey,
-    Output,
-    SCRIPT_EXPRESSION_TAG_MAP,
-)
+from urtypes.crypto.keypath import Keypath, PathComponent
+from urtypes.crypto.multi_key import MultiKey
+from urtypes.crypto.ec_key import ECKey
+from urtypes.crypto.hd_key import HDKey
+from urtypes.crypto.output import Output, SCRIPT_EXPRESSION_TAG_MAP
 
 
 class OutputTestCase(TestCase):

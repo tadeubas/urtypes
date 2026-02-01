@@ -152,7 +152,7 @@ class HDKey(RegistryItem):
             _map[3] = self.key
             _map[4] = self.chain_code
         else:
-            from ..cbor import DataItem
+            from ..cbor.data import DataItem
 
             if self.private_key is not None:
                 _map[2] = self.private_key

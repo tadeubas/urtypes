@@ -107,7 +107,7 @@ class Output(RegistryItem):
         return None
 
     def to_data_item(self):
-        from ..cbor import DataItem
+        from ..cbor.data import DataItem
 
         item = DataItem(None, self.crypto_key.to_data_item())
         if self.crypto_key.registry_type() is not None:
@@ -129,7 +129,7 @@ class Output(RegistryItem):
         while True:
             tag = tmp_item.tag
             if tag in SCRIPT_EXPRESSION_TAG_MAP:
-                from ..cbor import DataItem
+                from ..cbor.data import DataItem
 
                 script_expressions.append(SCRIPT_EXPRESSION_TAG_MAP[tag])
                 if isinstance(tmp_item.map, DataItem):

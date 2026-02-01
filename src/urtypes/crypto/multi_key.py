@@ -34,7 +34,7 @@ class MultiKey(RegistryItem):
         return None
 
     def to_data_item(self):
-        from ..cbor import DataItem
+        from ..cbor.data import DataItem
 
         _map = {}
         _map[1] = self.threshold
