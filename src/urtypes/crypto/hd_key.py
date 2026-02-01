@@ -42,20 +42,6 @@ class HDKey(RegistryItem):
         else:
             self.setup_derive_key(props)
 
-    def __eq__(self, o):
-        return (
-            self.master == o.master
-            and self.key == o.key
-            and self.chain_code == o.chain_code
-            and self.private_key == o.private_key
-            and self.use_info == o.use_info
-            and self.origin == o.origin
-            and self.children == o.children
-            and self.parent_fingerprint == o.parent_fingerprint
-            and self.name == o.name
-            and self.note == o.note
-        )
-
     @classmethod
     def registry_type(cls):
         return CRYPTO_HDKEY

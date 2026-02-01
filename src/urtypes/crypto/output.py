@@ -28,9 +28,6 @@ class ScriptExpression:
         self.tag = tag
         self.expression = expression
 
-    def __eq__(self, o):
-        return self.tag == o.tag and self.expression == o.expression
-
 
 SCRIPT_EXPRESSION_TAG_MAP = {
     307: ScriptExpression(307, "addr"),
@@ -54,12 +51,6 @@ class Output(RegistryItem):
     def __init__(self, script_expressions, crypto_key):
         self.script_expressions = script_expressions
         self.crypto_key = crypto_key
-
-    def __eq__(self, o):
-        return (
-            self.script_expressions == o.script_expressions
-            and self.crypto_key == o.crypto_key
-        )
 
     @classmethod
     def registry_type(cls):

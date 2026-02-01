@@ -30,9 +30,6 @@ class CoinInfo(RegistryItem):
         self.type = _type
         self.network = network
 
-    def __eq__(self, o):
-        return self.type == o.type and self.network == o.network
-
     @classmethod
     def registry_type(cls):
         return CRYPTO_COIN_INFO

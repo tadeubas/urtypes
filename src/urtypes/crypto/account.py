@@ -30,12 +30,6 @@ class Account(RegistryItem):
         self.master_fingerprint = master_fingerprint
         self.output_descriptors = output_descriptors
 
-    def __eq__(self, o):
-        return (
-            self.master_fingerprint == o.master_fingerprint
-            and self.output_descriptors == o.output_descriptors
-        )
-
     @classmethod
     def registry_type(cls):
         return CRYPTO_ACCOUNT

@@ -31,13 +31,6 @@ class Keypath(RegistryItem):
         self.source_fingerprint = source_fingerprint
         self.depth = depth
 
-    def __eq__(self, o):
-        return (
-            self.components == o.components
-            and self.source_fingerprint == o.source_fingerprint
-            and self.depth == o.depth
-        )
-
     @classmethod
     def registry_type(cls):
         return CRYPTO_KEYPATH
@@ -94,10 +87,3 @@ class PathComponent:
         self.wildcard = self.index is None
         if self.index and self.index & 0x80000000 != 0:
             raise ValueError("Invalid index - most significant bit cannot be set")
-
-    def __eq__(self, o):
-        return (
-            self.index == o.index
-            and self.hardened == o.hardened
-            and self.wildcard == o.wildcard
-        )

@@ -30,9 +30,6 @@ class BIP39(RegistryItem):
         self.words = words
         self.lang = lang
 
-    def __eq__(self, o):
-        return self.words == o.words and self.lang == o.lang
-
     @classmethod
     def registry_type(cls):
         return CRYPTO_BIP39

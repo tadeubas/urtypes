@@ -7,6 +7,7 @@ disable=
     consider-using-f-string,        # C0209
     line-too-long,                  # C0301
     ; trailing-whitespace,            # C0303
+    import-outside-toplevel,        # C0415
     ; unsubscriptable-object,         # E1136
     too-many-instance-attributes,   # R0902
     too-few-public-methods,         # R0903

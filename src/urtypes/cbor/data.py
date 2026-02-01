@@ -31,13 +31,6 @@ class Tagging:
         self.tag = tag
         self.obj = obj
 
-    def __eq__(self, other):
-        return (
-            isinstance(other, Tagging)
-            and self.tag == other.tag
-            and self.obj == other.obj
-        )
-
 
 class Mapping:
     __slots__ = ("map",)

@@ -29,9 +29,6 @@ class Bytes(RegistryItem):
     def __init__(self, data):
         self.data = data
 
-    def __eq__(self, o):
-        return self.data == o.data
-
     @classmethod
     def registry_type(cls):
         return BYTES
