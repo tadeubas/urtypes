@@ -155,33 +155,37 @@ class HDKey(RegistryItem):
         if self.master:
             _map[1] = True
             _map[3] = self.key
-            _map[4] = self.chain_code
-        else:
-            from ..cbor.data import DataItem
-
-            if self.private_key is not None:
-                _map[2] = self.private_key
-            _map[3] = self.key
             if self.chain_code is not None:
                 _map[4] = self.chain_code
-            if self.use_info is not None:
-                _map[5] = DataItem(
-                    self.use_info.registry_type().tag, self.use_info.to_data_item()
-                )
-            if self.origin is not None:
-                _map[6] = DataItem(
-                    self.origin.registry_type().tag, self.origin.to_data_item()
-                )
-            if self.children is not None:
-                _map[7] = DataItem(
-                    self.children.registry_type().tag, self.children.to_data_item()
-                )
-            if self.parent_fingerprint is not None:
-                _map[8] = int.from_bytes(self.parent_fingerprint, "big")
-            if self.name is not None:
-                _map[9] = self.name
-            if self.note is not None:
-                _map[10] = self.note
+            return _map
+
+        from ..cbor.data import DataItem
+
+        if self.private_key is not None:
+            _map[2] = self.private_key
+        _map[3] = self.key
+
+        if self.chain_code is not None:
+            _map[4] = self.chain_code
+        if self.use_info is not None:
+            _map[5] = DataItem(
+                self.use_info.registry_type().tag, self.use_info.to_data_item()
+            )
+        if self.origin is not None:
+            _map[6] = DataItem(
+                self.origin.registry_type().tag, self.origin.to_data_item()
+            )
+        if self.children is not None:
+            _map[7] = DataItem(
+                self.children.registry_type().tag, self.children.to_data_item()
+            )
+        if self.parent_fingerprint is not None:
+            _map[8] = int.from_bytes(self.parent_fingerprint, "big")
+        if self.name is not None:
+            _map[9] = self.name
+        if self.note is not None:
+            _map[10] = self.note
+
         return _map
 
     @classmethod
@@ -189,29 +193,21 @@ class HDKey(RegistryItem):
         from .coin_info import CoinInfo
         from .keypath import Keypath
 
-        _map = cls.mapping(item)
-        master = 1 in _map and _map[1]
-        private_key = _map[2] if 2 in _map else None
-        key = _map[3] if 3 in _map else None
-        chain_code = _map[4] if 4 in _map else None
-        use_info = CoinInfo.from_data_item(_map[5]) if 5 in _map else None
-        origin = Keypath.from_data_item(_map[6]) if 6 in _map else None
-        children = Keypath.from_data_item(_map[7]) if 7 in _map else None
-        parent_fingerprint = _map[8].to_bytes(4, "big") if 8 in _map else None
-        name = _map[9] if 9 in _map else None
-        note = _map[10] if 10 in _map else None
+        m = cls.mapping(item)
+        get = m.get
+
         return cls(
             {
-                "master": master,
-                "private_key": private_key,
-                "key": key,
-                "chain_code": chain_code,
-                "use_info": use_info,
-                "origin": origin,
-                "children": children,
-                "parent_fingerprint": parent_fingerprint,
-                "name": name,
-                "note": note,
+                "master": bool(get(1)),
+                "private_key": get(2),
+                "key": get(3),
+                "chain_code": get(4),
+                "use_info": CoinInfo.from_data_item(get(5)) if 5 in m else None,
+                "origin": Keypath.from_data_item(get(6)) if 6 in m else None,
+                "children": Keypath.from_data_item(get(7)) if 7 in m else None,
+                "parent_fingerprint": get(8).to_bytes(4, "big") if 8 in m else None,
+                "name": get(9),
+                "note": get(10),
             }
         )
 
@@ -225,19 +221,15 @@ def double_sha256(msg):
 
 def encode(b):
     """Encode bytes to a base58-encoded string"""
-    import binascii
 
     B58_DIGITS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
-    # Convert big-endian bytes to integer
-    n = int("0x0" + binascii.hexlify(b).decode("utf8"), 16)
-
-    # Divide that integer into bas58
+    n = int.from_bytes(b, "big")
     res = []
-    while n > 0:
+    while n:
         n, r = divmod(n, 58)
         res.append(B58_DIGITS[r])
-    res = "".join(res[::-1])
+    res.reverse()
 
     pad = 0
     for c in b:
@@ -245,9 +237,10 @@ def encode(b):
             pad += 1
         else:
             break
-    return B58_DIGITS[0] * pad + res
+
+    return B58_DIGITS[0] * pad + "".join(res)
 
 
 def encode_check(b):
     """Encode bytes to a base58-encoded string with a checksum"""
-    return encode(b + double_sha256(b)[0:4])
+    return encode(b + double_sha256(b)[:4])

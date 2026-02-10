@@ -44,7 +44,8 @@ class CoinInfo(RegistryItem):
 
     @classmethod
     def from_data_item(cls, item):
-        _map = cls.mapping(item)
-        _type = _map[1] if 1 in _map else None
-        network = _map[2] if 2 in _map else None
-        return cls(_type, network)
+        m = cls.mapping(item)
+        return cls(
+            m.get(1),  # type
+            m.get(2),  # network
+        )

@@ -50,21 +50,21 @@ class DataItem(Tagging):
         self.map = _map
 
 
-class _Undefined:
-    _instance = None
+# class _Undefined:
+#     _instance = None
 
-    def __new__(cls, *args, **kwargs):
-        if not isinstance(cls._instance, cls):
-            cls._instance = object.__new__(cls, *args, **kwargs)
-        return cls._instance
+#     def __new__(cls, *args, **kwargs):
+#         if not isinstance(cls._instance, cls):
+#             cls._instance = object.__new__(cls, *args, **kwargs)
+#         return cls._instance
 
-    def __str__(self):
-        return "Undefined"
+#     def __str__(self):
+#         return "Undefined"
 
-    def __repr__(self):
-        return "Undefined"
+#     def __repr__(self):
+#         return "Undefined"
 
 
-Undefined = _Undefined()
+# Undefined = _Undefined()
 
 __all__ = ("Tagging", "Mapping", "DataItem")

@@ -35,14 +35,16 @@ class BIP39(RegistryItem):
         return CRYPTO_BIP39
 
     def to_data_item(self):
-        _map = {1: self.words}
-        if self.lang is not None:
-            _map[2] = self.lang
-        return _map
+        m = {1: self.words}
+        l = self.lang
+        if l is not None:
+            m[2] = l
+        return m
 
     @classmethod
     def from_data_item(cls, item):
-        _map = cls.mapping(item)
-        words = _map[1]
-        lang = _map[2] if 2 in _map else None
-        return cls(words, lang)
+        m = cls.mapping(item)
+        return cls(
+            m[1],  # words
+            m.get(2),  # lang
+        )

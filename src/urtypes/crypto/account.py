@@ -35,23 +35,29 @@ class Account(RegistryItem):
         return CRYPTO_ACCOUNT
 
     def to_data_item(self):
-        _map = {}
-        if self.master_fingerprint is not None:
-            _map[1] = int.from_bytes(self.master_fingerprint, "big")
-        if self.output_descriptors is not None:
-            _map[2] = [
-                descriptor.to_data_item() for descriptor in self.output_descriptors
-            ]
-        return _map
+        m = {}
+
+        fp = self.master_fingerprint
+        if fp is not None:
+            m[1] = int.from_bytes(fp, "big")
+
+        outs = self.output_descriptors
+        if outs is not None:
+            m[2] = [o.to_data_item() for o in outs]
+
+        return m
 
     @classmethod
     def from_data_item(cls, item):
-        _map = cls.mapping(item)
-        master_fingerprint = _map[1].to_bytes(4, "big") if 1 in _map else None
+        m = cls.mapping(item)
+        get = m.get
+
+        fp = get(1)
+        if fp is not None:
+            fp = fp.to_bytes(4, "big")
 
         from .output import Output
 
-        outputs = (
-            [Output.from_data_item(item) for item in _map[2]] if 2 in _map else None
-        )
-        return cls(master_fingerprint, outputs)
+        outs = [Output.from_data_item(o) for o in get(2)] if 2 in m else None
+
+        return cls(fp, outs)

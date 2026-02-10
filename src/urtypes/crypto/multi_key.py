@@ -36,14 +36,18 @@ class MultiKey(RegistryItem):
     def to_data_item(self):
         from ..cbor.data import DataItem
 
-        _map = {}
-        _map[1] = self.threshold
-        combined_keys = self.ec_keys[:] + self.hd_keys[:]
-        keys = []
-        for key in combined_keys:
-            keys.append(DataItem(key.registry_type().tag, key.to_data_item()))
-        _map[2] = keys
-        return _map
+        m = {1: self.threshold}
+        out = []
+
+        append = out.append
+
+        for k in self.ec_keys:
+            append(DataItem(k.registry_type().tag, k.to_data_item()))
+        for k in self.hd_keys:
+            append(DataItem(k.registry_type().tag, k.to_data_item()))
+
+        m[2] = out
+        return m
 
     @classmethod
     def from_data_item(cls, item):

@@ -46,11 +46,12 @@ class ECKey(RegistryItem):
 
     @classmethod
     def from_data_item(cls, item):
-        _map = cls.mapping(item)
-        data = _map[3]
-        curve = _map[1] if 1 in _map else None
-        private_key = _map[2] if 2 in _map else None
-        return cls(data, curve, private_key)
+        m = cls.mapping(item)
+        return cls(
+            m[3],  # data
+            m.get(1),  # curve
+            m.get(2),  # pkey
+        )
 
     def descriptor_key(self):
         import binascii

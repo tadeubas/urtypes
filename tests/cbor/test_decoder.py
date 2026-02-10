@@ -46,3 +46,27 @@ class DecoderTestCase(TestCase):
         decoder = Decoder(io.BytesIO(cbor))
         self.assertEqual(decoder.decode(), {"a": 1, "b": 2})
 
+    def test_minimal_cbor_decoder(self):
+
+        def _decode(val):
+            dec = Decoder(io.BytesIO(val))
+            return dec.decode()
+
+        assert _decode(b'\x1a\x00\x01\x11\x70') == 0x11170
+        assert _decode(b'\x1b\x00\x00\x00\x01\x02\x03\x04\x05') == 0x102030405
+        assert _decode(b'\x00') == 0
+        assert _decode(b'\x01') == 1
+        assert _decode(b"\x17") == 23
+        assert _decode(b"\x18\x18") == 24
+        assert _decode(b"\x18\xff") == 255
+        assert _decode(b"\x19\x01\x00") == 256
+        assert _decode(b"\x19\xff\xff") == 65535
+        assert _decode(b"\x1a\x00\x01\x00\x00") == 65536
+        assert _decode(b"\x40") == b""
+        assert _decode(b"\x41a") == b"a"
+        assert _decode(b"\x57" + b"a" * 23) == b"a" * 23
+        assert _decode(b"\x58\x18" + b"a" * 24) == b"a" * 24
+        assert _decode(b"\x80") == []
+        assert _decode(b"\x97" + b"\x00" * 23) == [0] * 23
+        assert _decode(b"\x98\x18" + b"\x00" * 24) == [0] * 24
+

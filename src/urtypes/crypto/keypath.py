@@ -36,54 +36,67 @@ class Keypath(RegistryItem):
         return CRYPTO_KEYPATH
 
     def path(self):
-        if not self.components:
+        comps = self.components
+        if not comps:
             return ""
+
         return "/".join(
-            [
-                ("*" if component.wildcard else str(component.index))
-                + ("'" if component.hardened else "")
-                for component in self.components
-            ]
+            (("*" if c.wildcard else str(c.index)) + ("'" if c.hardened else ""))
+            for c in comps
         )
 
     def to_data_item(self):
         _map = {}
-        components = []
-        for component in self.components:
-            if component.wildcard:
-                components.append([])
-            else:
-                components.append(component.index)
-            components.append(component.hardened)
-        _map[1] = components
-        if self.source_fingerprint is not None:
-            _map[2] = int.from_bytes(self.source_fingerprint, "big")
-        if self.depth is not None:
-            _map[3] = self.depth
+        comps = self.components
+
+        out = []
+        for c in comps:
+            out.append([] if c.wildcard else c.index)
+            out.append(c.hardened)
+
+        _map[1] = out
+
+        fp = self.source_fingerprint
+        if fp is not None:
+            _map[2] = int.from_bytes(fp, "big")
+
+        d = self.depth
+        if d is not None:
+            _map[3] = d
+
         return _map
 
     @classmethod
     def from_data_item(cls, item):
-        _map = cls.mapping(item)
-        path_components = []
-        components = _map[1]
-        if components:
-            for i in range(0, len(components), 2):
-                hardened = components[i + 1]
-                path = components[i]
-                if isinstance(path, int):
-                    path_components.append(PathComponent(path, hardened))
-                else:
-                    path_components.append(PathComponent(None, hardened))
-        source_fingerprint = _map[2].to_bytes(4, "big") if 2 in _map else None
-        depth = _map[3] if 3 in _map else None
-        return cls(path_components, source_fingerprint, depth)
+        m = cls.mapping(item)
+        get = m.get
+
+        raw = get(1)
+        components = []
+
+        if raw:
+            it = iter(raw)
+            for path, hardened in zip(it, it):
+                components.append(
+                    PathComponent(path if isinstance(path, int) else None, hardened)
+                )
+
+        fp = get(2)
+        if fp is not None:
+            fp = fp.to_bytes(4, "big")
+
+        return cls(
+            components,
+            fp,
+            get(3),  # depth
+        )
 
 
 class PathComponent:
     def __init__(self, index, hardened):
+        if index is not None and (index & 0x80000000) != 0:
+            raise ValueError("Invalid index - most significant bit cannot be set")
+
         self.index = index
         self.hardened = hardened
-        self.wildcard = self.index is None
-        if self.index and self.index & 0x80000000 != 0:
-            raise ValueError("Invalid index - most significant bit cannot be set")
+        self.wildcard = index is None
