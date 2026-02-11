@@ -23,7 +23,7 @@
 import io
 import binascii
 from unittest import TestCase
-from urtypes.cbor.decoder import Decoder
+from urtypes.cbor.decoder import Decoder, InvalidCborError
 
 class DecoderTestCase(TestCase):
     def test_indefinite_bytestring(self):
@@ -45,6 +45,23 @@ class DecoderTestCase(TestCase):
         cbor = binascii.unhexlify("bf616101616202ff")
         decoder = Decoder(io.BytesIO(cbor))
         self.assertEqual(decoder.decode(), {"a": 1, "b": 2})
+
+    def test_exceptions(self):
+        def run_test(data):
+            error = False
+            try:
+                Decoder(io.BytesIO(data)).decode()
+                # print("FAIL:", data)
+            except InvalidCborError as e:
+                # print("PASS:", e)
+                error = True
+            assert error == True
+
+        run_test(bytes([0x42, 0xAA])) # Expected 2 bytes, got 1 bytes instead
+        run_test(bytes([0x59, 0x00])) # Expected 2 bytes, got 1 bytes instead
+        run_test(bytes([0x5F, 0x61, 0x41, 0xFF])) # Wrong chunk type
+        run_test(bytes([0xFF])) # Invalid BREAK code occurred
+
 
     def test_minimal_cbor_decoder(self):
 

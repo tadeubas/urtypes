@@ -32,7 +32,7 @@ class InvalidCborError(Exception):
 
 class _Break(InvalidCborError):
     def __init__(self):
-        InvalidCborError.__init__(self, "Invalid BREAK code occurred")
+        super().__init__("Invalid BREAK code occurred")
 
 
 class Decoder:
@@ -63,7 +63,7 @@ class Decoder:
 
     def decode_integer(self, ainfo, sign=False):
         res = self._decode_length(ainfo)
-        if sign is True:
+        if sign:
             return -1 - res
         return res
 
@@ -83,13 +83,13 @@ class Decoder:
         length = self._decode_length(ainfo)
         if length is None:
             return bytes(self._decode_indefinite_string(2))
-        return self.input.read(length)
+        return self._read(length)
 
     def decode_textstring(self, ainfo):
         length = self._decode_length(ainfo)
         if length is None:
             return self._decode_indefinite_string(3).decode("utf-8")
-        return self.input.read(length).decode("utf-8")
+        return self._read(length).decode("utf-8")
 
     def decode_list(self, ainfo):
         length = self._decode_length(ainfo)
@@ -108,8 +108,8 @@ class Decoder:
 
     def decode_dict(self, ainfo):
         length = self._decode_length(ainfo)
+        res = {}
         if length is None:
-            res = {}
             try:
                 while True:
                     key = self.decode()
@@ -118,15 +118,15 @@ class Decoder:
             except _Break:
                 pass
             return res
-        res = {}
         for _ in range(length):
-            key, value = self.decode(), self.decode()
+            key = self.decode()
+            value = self.decode()
             res[key] = value
         return res
 
     def decode_tagging(self, ainfo):
-        length = self._decode_length(ainfo)
-        return DataItem(length, self.decode())
+        tag = self._decode_length(ainfo)
+        return DataItem(tag, self.decode())
 
     # def decode_half_float(self):
     #     import struct
@@ -169,37 +169,31 @@ class Decoder:
         raise _Break()
 
     def _decode_ibyte(self):
-        byte = self.input.read(1)[0]
-        # if isinstance(byte, str):
-        #     byte = ord(byte)
-        return (byte & 0b11100000) >> 5, byte & 0b00011111
+        byte = self._read(1)[0]
+        return (byte >> 5), (byte & 0x1F)
 
     def _decode_length(self, ainfo):
         if ainfo < 24:
             return ainfo
         if ainfo == 24:
-            return self.input.read(1)[0]
+            return self._read(1)[0]
         if ainfo == 25:
-            return int.from_bytes(self.input.read(2), "big")
+            return int.from_bytes(self._read(2), "big")
         if ainfo == 26:
-            return int.from_bytes(self.input.read(4), "big")
+            return int.from_bytes(self._read(4), "big")
         if ainfo == 27:
-            return int.from_bytes(self.input.read(8), "big")
+            return int.from_bytes(self._read(8), "big")
         if ainfo == 31:
             return None
         raise InvalidCborError("Invalid additional information {}".format(ainfo))
 
-    # def _read(self, n):
-    #     m = self.input.read(n)
-    #     if len(m) != n:
-    #         raise InvalidCborError(
-    #             "Expected {} bytes, got {} bytes instead".format(n, len(m))
-    #         )
-    #     return m
+    def _read(self, n):
+        m = self.input.read(n)
+        if len(m) != n:
+            raise InvalidCborError(
+                "Expected {} bytes, got {} bytes instead".format(n, len(m))
+            )
+        return m
 
 
 __all__ = ("InvalidCborError", "Decoder")
-
-
-def from_bytes(val):
-    return int.from_bytes(val, "big")
